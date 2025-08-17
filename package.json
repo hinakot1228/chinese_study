@@ -2,13 +2,16 @@
   "name": "chinese_vocabulary_book",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "homepage": "https://hinakot1228.github.io/chinese_study/",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "predeploy": "expo export --platform web",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@expo-google-fonts/yusei-magic": "^0.4.0",
@@ -45,6 +48,7 @@
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
+    "gh-pages": "^6.3.0",
     "typescript": "~5.8.3"
   },
   "private": true
