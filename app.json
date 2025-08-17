@@ -38,7 +38,8 @@
       "expo-font"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/chinese_study/"
     },
     "extra": {
       "router": {},
