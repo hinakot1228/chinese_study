@@ -25,6 +25,14 @@ function getCsvModule(level: string) {
       return require("../../../assets/csv/HSK1_vocab.csv");
     case "hsk2":
       return require("../../../assets/csv/HSK2_vocab.csv");
+    case "hsk3":
+      return require("../../../assets/csv/HSK3_vocab.csv");
+    case "hsk4":
+      return require("../../../assets/csv/HSK4_vocab.csv");
+    case "hsk5":
+      return require("../../../assets/csv/HSK5_vocab.csv");
+    case "hsk6":
+      return require("../../../assets/csv/HSK6_vocab.csv");
     default:
       return require("../../../assets/csv/HSK1_vocab.csv"); // フォールバック
   }
