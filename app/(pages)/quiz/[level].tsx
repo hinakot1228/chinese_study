@@ -12,6 +12,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import HalfButton from "../../components/button/HalfButton";
 import LayoutWrapper from "../../components/wrapper/LayoutWrapper";
+import * as Speech from "expo-speech";
+import { Platform } from "react-native";
+import SoundHandleButton from "app/components/button/SoundHandleButton";
 
 type Vocab = {
   word: string;
@@ -56,6 +59,7 @@ export default function QuizByLevel() {
   const [choices, setChoices] = useState<Vocab[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [score, setScore] = useState(0);
+  const [mute, setMute] = useState(false);
 
   // CSV読込
   useEffect(() => {
@@ -120,6 +124,7 @@ export default function QuizByLevel() {
 
   const handleNext = () => {
     if (!selected) return;
+    Speech.stop(); // 次の読み上げに備え停止
     if (isLast) {
       router.push("/");
     } else {
@@ -127,6 +132,30 @@ export default function QuizByLevel() {
       setSelected(null);
     }
   };
+
+  // 読み上げ関数
+  const speakCurrent = React.useCallback(() => {
+    if (!current || mute) return;
+    Speech.stop(); // かぶり読み防止
+    const text = current.word;
+    Speech.speak(text, {
+      language: "zh-CN",
+      pitch: 1.0,
+      rate: Platform.select({ ios: 0.5, android: 1.0, default: 1.0 }), // 速さ
+      onDone: () => {},
+      onStopped: () => {},
+      onError: (e) => console.warn("Speech error:", e),
+    });
+  }, [current, mute]);
+
+  // 問題が切り替わるたびに自動再生
+  useEffect(() => {
+    speakCurrent();
+    return () => {
+      // 画面離脱・次の問題へ移動時に止める
+      Speech.stop();
+    };
+  }, [speakCurrent]);
 
   return (
     <>
@@ -203,6 +232,25 @@ export default function QuizByLevel() {
               >
                 {current.word}
               </Text>
+              <View style={styles.soundHandleButtonContainer}>
+                <SoundHandleButton
+                  label={mute ? "🔇" : "🔊"}
+                  accessibilityLabel={
+                    mute ? "音声をオンにする" : "音声をオフにする"
+                  }
+                  onPress={() => setMute((m) => !m)}
+                />
+
+                <SoundHandleButton
+                  label="🗣️"
+                  accessibilityLabel="もう一度読み上げる"
+                  onPress={() => {
+                    Speech.stop();
+                    speakCurrent();
+                  }}
+                  disabled={mute}
+                />
+              </View>
             </View>
             <DottedLine />
             <View style={styles.statementContainer}>
@@ -318,6 +366,15 @@ const styles = StyleSheet.create({
   questionWord: {
     fontSize: FONT_SIZE.xl,
     textAlign: "center",
+  },
+  soundHandleButtonContainer: {
+    flex: 1,
+    flexDirection: "column",
+    gap: 10,
+    alignItems: "flex-end",
+    position: "absolute",
+    right: -16,
+    bottom: -6,
   },
   statementContainer: {
     flex: 2,

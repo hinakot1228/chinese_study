@@ -8,15 +8,15 @@ export const DIMENSIONS = {
   },
 
   borderWidth: {
-    // thin: 1,
+    thin: 1,
     medium: 1.5,
     thick: 2,
   },
 
-  // radius: {
-  //   sm: 4,
-  //   md: 8,
-  //   lg: 12,
-  //   full: 9999,
-  // },
+  radius: {
+    //   sm: 4,
+    md: 6,
+    //   lg: 12,
+    //   full: 9999,
+  },
 } as const;
