@@ -8,13 +8,14 @@ import DottedLine from "app/components/ui/DottedLine";
 import { Asset } from "expo-asset";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import Papa from "papaparse";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import HalfButton from "../../components/button/HalfButton";
 import LayoutWrapper from "../../components/wrapper/LayoutWrapper";
 import * as Speech from "expo-speech";
 import { Platform } from "react-native";
 import SoundHandleButton from "app/components/button/SoundHandleButton";
+import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
 
 type Vocab = {
   word: string;
@@ -60,6 +61,22 @@ export default function QuizByLevel() {
   const [selected, setSelected] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [mute, setMute] = useState(false);
+
+  // ★ 効果音プレイヤーを用意（ファイルは同じパスでOK）
+  const correctPlayer = useAudioPlayer(
+    require("../../../assets/sounds/correct.mp3")
+  );
+  const wrongPlayer = useAudioPlayer(
+    require("../../../assets/sounds/wrong.mp3")
+  );
+
+  // iOSのサイレントでも鳴らしたい場合（不要なら削ってOK）
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      allowsRecording: false,
+    }).catch(() => {});
+  }, []);
 
   // CSV読込
   useEffect(() => {
@@ -116,10 +133,19 @@ export default function QuizByLevel() {
 
   const isLast = useMemo(() => idx >= list.length - 1, [idx, list.length]);
 
-  const handleSelect = (m: string) => {
-    if (selected) return; // 一度選んだら固定
+  // 変更前（expo-speechはそのまま利用OK）
+  const handleSelect = async (m: string) => {
+    if (selected) return;
     setSelected(m);
-    if (m === current.meaning) setScore((s) => s + 1);
+
+    const isCorrect = m === current.meaning;
+    if (isCorrect) setScore((s) => s + 1);
+
+    // かぶり防止で読み上げ停止
+    Speech.stop();
+
+    // ★ 効果音を鳴らす
+    await playEffect(isCorrect ? "ok" : "ng");
   };
 
   const handleNext = () => {
@@ -156,6 +182,19 @@ export default function QuizByLevel() {
       Speech.stop();
     };
   }, [speakCurrent]);
+
+  // ★ 効果音再生（ミュートなら鳴らさない）
+  const playEffect = async (type: "ok" | "ng") => {
+    if (mute) return;
+    try {
+      const p = type === "ok" ? correctPlayer : wrongPlayer;
+      // expo-audio は再生後に位置が末尾で止まる → 頭出しして再生
+      p.seekTo(0);
+      p.play();
+    } catch (e) {
+      console.warn("playEffect error:", e);
+    }
+  };
 
   return (
     <>
